@@ -1,0 +1,29 @@
+global:
+  registry: myregistry.azurecr.io
+  tag: latest
+
+services:
+  user:
+    replicaCount: 2
+    port: 3000
+  product:
+    replicaCount: 2
+    port: 5000
+  order:
+    replicaCount: 2
+    port: 3001
+  payment:
+    replicaCount: 2
+    port: 5001
+  gateway:
+    replicaCount: 2
+    port: 80
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: ecommerce.local
+      paths:
+        - path: /
+          pathType: Prefix

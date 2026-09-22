@@ -1,0 +1,34 @@
+{{- range $serviceName, $serviceDetails := .Values.services }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $serviceName }}-service
+  labels:
+    app: {{ $serviceName }}-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ $serviceDetails.port }}
+      targetPort: {{ $serviceDetails.port }}
+      protocol: TCP
+  selector:
+    app: {{ $serviceName }}-service
+{{- end }}
+
+---
+# Gateway Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+  labels:
+    app: gateway
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: {{ .Values.services.gateway.port }}
+      protocol: TCP
+  selector:
+    app: gateway

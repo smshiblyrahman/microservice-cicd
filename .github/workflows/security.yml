@@ -1,0 +1,33 @@
+name: Security Scan
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [user-service, product-service, order-service, payment-service, gateway]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build Docker Image
+        run: |
+          if [ "${{ matrix.service }}" == "gateway" ]; then
+            docker build -t ecommerce/${{ matrix.service }}:${{ github.sha }} ./gateway
+          else
+            docker build -t ecommerce/${{ matrix.service }}:${{ github.sha }} ./services/${{ matrix.service }}
+          fi
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'ecommerce/${{ matrix.service }}:${{ github.sha }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'

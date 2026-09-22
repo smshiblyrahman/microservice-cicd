@@ -1,0 +1,56 @@
+{{- range $serviceName, $serviceDetails := .Values.services }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $serviceName }}-service
+  labels:
+    app: {{ $serviceName }}-service
+spec:
+  replicas: {{ $serviceDetails.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ $serviceName }}-service
+  template:
+    metadata:
+      labels:
+        app: {{ $serviceName }}-service
+    spec:
+      containers:
+        - name: {{ $serviceName }}-service
+          image: "{{ $.Values.global.registry }}/{{ $serviceName }}-service:{{ $.Values.global.tag }}"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: {{ $serviceDetails.port }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ $serviceDetails.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+{{- end }}
+
+---
+# Gateway Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+  labels:
+    app: gateway
+spec:
+  replicas: {{ .Values.services.gateway.replicaCount }}
+  selector:
+    matchLabels:
+      app: gateway
+  template:
+    metadata:
+      labels:
+        app: gateway
+    spec:
+      containers:
+        - name: gateway
+          image: "{{ .Values.global.registry }}/gateway:{{ .Values.global.tag }}"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: {{ .Values.services.gateway.port }}
